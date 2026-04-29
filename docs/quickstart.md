@@ -21,7 +21,7 @@ If you're missing either of those, no amount of documentation is going to help y
 /Volumes/Storage/Dr_ClaudeGoode/personality-swap.sh --list
 ```
 
-You'll see all five with their descriptions. Pick whichever one matches the kind of session you want. Or the one that sounds like it would annoy Douglas the most. Your call.
+You'll see all six with their descriptions. Pick whichever one matches the kind of session you want. Or the one that sounds like it would annoy Douglas the most. Your call.
 
 ---
 
@@ -33,9 +33,9 @@ You'll see all five with their descriptions. Pick whichever one matches the kind
 
 The script does three things, none of which require you to understand bash scripting:
 
-1. **Backs up your originals** — `~/.claude/CLAUDE.md` and `~/.claude/MEMORY.md` get timestamped copies in `~/.claude/personality-backup/`. First swap also saves permanent `.original` copies. This was Floyd's idea. Douglas thought backups were "unnecessary." Douglas was wrong. Floyd said nothing and built them anyway.
+1. **Backs up your originals** — `~/.claude/CLAUDE.md`, `~/.claude/MEMORY.md`, and `~/.claude/rules/common/development-workflow.md` get timestamped copies in `~/.claude/personality-backup/`. First swap also saves permanent `.original` copies. This was Floyd's idea. Douglas thought backups were "unnecessary." Douglas was wrong. Floyd said nothing and built them anyway.
 
-2. **Swaps CLAUDE.md** — full file replacement. The personality's entire behavioral contract becomes your active instruction set.
+2. **Swaps CLAUDE.md and rules** — full file replacements. The personality's entire behavioral contract becomes your active instruction set, and the workflow rules get swapped to match.
 
 3. **Injects MEMORY.md overlay** — the personality's identity section gets appended between marker lines. Your existing memory content stays intact. Nothing gets eaten.
 
@@ -47,14 +47,17 @@ The script does three things, none of which require you to understand bash scrip
 /Volumes/Storage/Dr_ClaudeGoode/personality-swap.sh --verify
 ```
 
-Four checks run:
+Seven checks run:
 
 - CLAUDE.md has a personality header
 - MEMORY.md has an overlay marker with the right name
 - State file matches what you activated
 - Governance references are still present (because Floyd is thorough)
+- Rules overlay is correctly swapped (if the personality provides one)
+- Execution contract is present (recency bias enforcement)
+- Deterministic language audit passes (no SHOULD/CONSIDER/TRY hedging)
 
-All four should pass. If they don't, something went wrong and you should visit [Troubleshooting](troubleshooting.md). Or, as Douglas would say, "just run it again and see what happens."
+All seven should pass. If they don't, something went wrong and you should visit [Troubleshooting](troubleshooting.md). Or, as Douglas would say, "just run it again and see what happens."
 
 ---
 
@@ -94,7 +97,7 @@ Copies the `.original` backup files back and removes the state file. You're back
 /Volumes/Storage/Dr_ClaudeGoode/personality-rubric-test.sh --static
 ```
 
-This runs 10 metrics across all 5 personalities and checks five things:
+This runs 10 metrics across all 6 personalities and checks five things:
 
 1. No two personalities are identical
 2. At least 3 unique domain specializations

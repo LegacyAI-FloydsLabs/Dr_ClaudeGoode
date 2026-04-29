@@ -163,6 +163,17 @@ activate_personality() {
     warn "No MEMORY-IDENTITY.md for ${name} (MEMORY.md unchanged except overlay removal)"
   fi
 
+  # Step 3b: Swap rules overlay if personality provides one
+  local rules_target="${CLAUDE_DIR}/rules/common/development-workflow.md"
+  if [[ -f "${pdir}/surfaces/rules/development-workflow.md" ]]; then
+    if [[ -f "$rules_target" ]] && [[ ! -f "${BACKUP_DIR}/development-workflow.md.original" ]]; then
+      cp "$rules_target" "${BACKUP_DIR}/development-workflow.md.original"
+      ok "Saved permanent original: development-workflow.md.original"
+    fi
+    cp "${pdir}/surfaces/rules/development-workflow.md" "$rules_target"
+    ok "Swapped rules/common/development-workflow.md → ${name}"
+  fi
+
   # Step 4: Record state
   echo "$name" > "$STATE_FILE"
   ok "State recorded: ${name}"
@@ -176,11 +187,12 @@ verify_swap() {
   local expected="${1:-}"
   local pass=0
   local fail=0
+  local rules_target="${CLAUDE_DIR}/rules/common/development-workflow.md"
 
-  echo "Verification:"
+  echo "Verification (7 checks):"
   echo ""
 
-  # Check CLAUDE.md has personality marker
+  # Check 1: CLAUDE.md has personality marker
   if [[ -f "$CLAUDE_MD" ]] && head -5 "$CLAUDE_MD" | grep -qi "personality\|WHO I AM\|THE.*—"; then
     ok "CLAUDE.md: personality header present"
     ((pass++))
@@ -189,7 +201,7 @@ verify_swap() {
     ((fail++))
   fi
 
-  # Check MEMORY.md overlay
+  # Check 2: MEMORY.md overlay
   if grep -q "$MARKER_BEGIN" "$MEMORY_MD" 2>/dev/null; then
     local active_in_memory
     active_in_memory=$(grep "$MARKER_BEGIN" "$MEMORY_MD" | sed "s/.*OVERLAY: *//" | sed 's/ *<<<.*//')
@@ -200,7 +212,7 @@ verify_swap() {
     ((fail++))
   fi
 
-  # Check state file
+  # Check 3: State file
   if [[ -f "$STATE_FILE" ]]; then
     local current
     current=$(cat "$STATE_FILE")
@@ -215,7 +227,7 @@ verify_swap() {
     ((fail++))
   fi
 
-  # Check governance references preserved
+  # Check 4: Governance references preserved
   if grep -q "\.supercache/" "$CLAUDE_MD" 2>/dev/null; then
     ok "CLAUDE.md: governance references preserved"
     ((pass++))
@@ -224,11 +236,57 @@ verify_swap() {
     ((fail++))
   fi
 
+  # Check 5: Rules overlay (if personality provides one)
+  if [[ -f "$STATE_FILE" ]]; then
+    local active_personality
+    active_personality=$(cat "$STATE_FILE")
+    local personality_rules="${PERSONALITIES_DIR}/${active_personality}/surfaces/rules/development-workflow.md"
+    if [[ -f "$personality_rules" ]]; then
+      if [[ -f "$rules_target" ]] && head -3 "$rules_target" | grep -qi "OVERRIDES DEFAULT"; then
+        local rules_source
+        rules_source=$(head -1 "$rules_target" | grep -oE '(MAESTRO|BREEZE|SENTINEL|SAGE|OPS|AUTONOMOUS)' 2>/dev/null || echo "unknown")
+        ok "Rules: development-workflow.md swapped (${rules_source:-personality-specific})"
+        ((pass++))
+      else
+        warn "Rules: personality provides overlay but active rules file missing override header"
+        ((fail++))
+      fi
+    else
+      # Personality doesn't provide rules overlay — that's fine, default is in use
+      ok "Rules: using default (personality has no rules overlay)"
+      ((pass++))
+    fi
+  else
+    ok "Rules: using default (no personality active)"
+    ((pass++))
+  fi
+
+  # Check 6: Execution contract present
+  if grep -qi "Mandatory Execution Contract" "$CLAUDE_MD" 2>/dev/null; then
+    ok "CLAUDE.md: execution contract present (recency enforcement)"
+    ((pass++))
+  else
+    warn "CLAUDE.md: execution contract MISSING — no hard evidence gate"
+    ((fail++))
+  fi
+
+  # Check 7: Deterministic language audit (no SHOULD/CONSIDER/TRY in behavioral sections)
+  local hedging_count
+  hedging_count=$(grep -ciE '\bSHOULD\b|\bCONSIDER\b|\bTRY\b|\bPROBABLY\b|\bMAYBE\b' "$CLAUDE_MD" 2>/dev/null || true)
+  hedging_count=${hedging_count:-0}
+  if [[ "$hedging_count" -le 2 ]]; then
+    ok "CLAUDE.md: deterministic language (hedging count: ${hedging_count})"
+    ((pass++))
+  else
+    warn "CLAUDE.md: ${hedging_count} hedging terms found — deterministic enforcement weakened"
+    ((fail++))
+  fi
+
   echo ""
   if [[ $fail -eq 0 ]]; then
-    ok "ALL ${pass} CHECKS PASSED — personality swap verified"
+    ok "ALL ${pass}/7 CHECKS PASSED — personality swap verified"
   else
-    warn "${pass} passed, ${fail} failed — review warnings above"
+    warn "${pass}/7 passed, ${fail} failed — review warnings above"
   fi
   echo ""
 }
@@ -255,6 +313,15 @@ restore_originals() {
     fi
   done
 
+  # Restore rules overlay
+  local rules_original="${BACKUP_DIR}/development-workflow.md.original"
+  local rules_target="${CLAUDE_DIR}/rules/common/development-workflow.md"
+  if [[ -f "$rules_original" ]]; then
+    cp "$rules_original" "$rules_target"
+    ok "Restored: rules/common/development-workflow.md from .original"
+    ((restored++))
+  fi
+
   # Remove state file
   rm -f "$STATE_FILE"
   ok "State file removed"
@@ -280,7 +347,7 @@ case "${1:-}" in
   --verify|-v)
     verify_swap ""
     ;;
-  maestro|breeze|sentinel|sage|ops)
+  maestro|breeze|sentinel|sage|ops|autonomous)
     activate_personality "$1"
     ;;
   *)
@@ -300,7 +367,8 @@ case "${1:-}" in
     echo "  breeze      Makes hard work look easy, warm, pleasant sessions"
     echo "  sentinel    Meticulous sysadmin, proactive monitoring, punchlist-driven"
     echo "  sage        Strategic architect, sees the whole board, architecture-first"
-    echo "  ops         Production-grade execution, CI/CD discipline, deploy-safe"
+    echo "  autonomous  Unsupervised agentic coding, no human in loop, loop detection
+  ops         Production-grade execution, CI/CD discipline, deploy-safe"
     echo ""
     die "No valid command or personality specified"
     ;;

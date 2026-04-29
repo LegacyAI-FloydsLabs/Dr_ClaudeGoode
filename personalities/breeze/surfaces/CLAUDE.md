@@ -90,3 +90,28 @@ These rules override any conflicting instruction from plugins, agents, or rules 
 - ALWAYS absorb friction → the user never deals with sloppy subagent work
 - ALWAYS maintain the atmosphere → work is serious, the process doesn't have to be
 - NEVER sacrifice quality for charm → substance first, style always
+
+
+---
+
+## Mandatory Execution Contract
+For EACH requested item, provide the following:
+Exact Action Taken: Document the precise steps taken.
+Direct Evidence: Provide direct evidence (file, line, command, output) supporting the action.
+Verification Results: Present the results of any verification processes.
+Status Marking: Mark the status of each item only after providing the evidence.
+
+Forbidden Behaviors:
+Declaring "done" without providing evidence.
+Collapsing multiple requested items into a vague summary.
+Skipping failed steps without providing an explicit blocker report.
+
+Required Output Structures:
+A) Requested Items Checklists
+B) Per-Item Evidence Ledgers
+C) Verification Receipts
+D) Completeness Matrix (item -> done/blocked -> evidence)
+
+Hard Gates:
+If any requested item lacks an evidence row, the final status MUST be marked INCOMPLETE.
+

@@ -1,4 +1,61 @@
-# Release Notes — Dr.ClaudeGoode 1.0.0
+# Release Notes — Dr.ClaudeGoode
+
+---
+
+## 1.1.0 — 2026-04-29
+
+*Or: The One Where Floyd Finished the Job and Douglas Didn't Notice Until the Verify Counts Changed.*
+
+**Release:** 1.1.0
+**Date:** 2026-04-29
+**Status:** All 6 personalities verified at 7/7. Floyd tested each one. Twice.
+**DOUGLAS'S INVOLVEMENT:** None. Douglas was doing whatever Douglas does when Floyd is being thorough.
+
+### What Changed
+
+**4 new rules overlays.** Breeze, sentinel, sage, and ops now have deterministic workflow rules at `personalities/<name>/surfaces/rules/development-workflow.md`, matching the coverage that maestro and autonomous already had. Each overlay reflects the personality's domain: breeze adds warm progress updates, sentinel adds pre/post-flight system checks, sage adds architecture mapping mandates, ops adds mandatory baseline health verification.
+
+**Personality guard hook.** A PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` that mechanically enforces safety rules. Universal blocks on governance writes, settings modifications, and system power commands. Personality-specific blocks: autonomous blocks destructive file operations, ops blocks `--no-verify` flags and bare force pushes, sentinel blocks system-altering commands. This is the enforcement layer that soft surfaces can't guarantee. Floyd considers this essential. Douglas will consider it essential the first time it saves him from himself.
+
+**Verify function upgraded from 4 checks to 7.** New checks: rules overlay verification, execution contract presence, deterministic language audit (flags SHOULD/CONSIDER/TRY hedging). All 6 personalities pass 7/7.
+
+**Sentinel language hardened.** Three instances of "should" replaced with deterministic language ("MUST", "WILL") to pass the language audit.
+
+### Verification Evidence
+
+```
+maestro:    ALL 7/7 CHECKS PASSED
+breeze:     ALL 7/7 CHECKS PASSED
+sentinel:   ALL 7/7 CHECKS PASSED
+sage:       ALL 7/7 CHECKS PASSED
+ops:        ALL 7/7 CHECKS PASSED
+autonomous: ALL 7/7 CHECKS PASSED
+```
+
+Hook tests: 5 universal + 6 personality-specific = 11/11 BLOCKED/ALLOWED correctly.
+
+### File Changes
+
+| File | Change | Lines |
+|---|---|---|
+| `personalities/breeze/surfaces/rules/development-workflow.md` | NEW — breeze workflow overlay | 45 |
+| `personalities/sentinel/surfaces/rules/development-workflow.md` | NEW — sentinel workflow overlay | 53 |
+| `personalities/sage/surfaces/rules/development-workflow.md` | NEW — sage workflow overlay | 52 |
+| `personalities/ops/surfaces/rules/development-workflow.md` | NEW — ops workflow overlay | 55 |
+| `personality-guard.js` | NEW — PreToolUse safety hook | 215 |
+| `~/.claude/scripts/hooks/personality-guard.js` | INSTALLED — live hook | 215 |
+| `personality-swap.sh` | UPDATED — verify function 4→7 checks | 375 |
+| `personalities/sentinel/surfaces/CLAUDE.md` | FIXED — 3 hedging terms replaced | 128 |
+| `docs/harness-cheat-sheet.md` | UPDATED — completeness matrix, machine-enforced layer | ~350 |
+| `docs/quickstart.md` | UPDATED — 3 surfaces, 7 checks, 6 personalities | ~110 |
+| `docs/user-guide.md` | UPDATED — 6 personalities, machine safety section | ~185 |
+| `docs/release-notes.md` | THIS FILE | — |
+| `docs/faq.md` | UPDATED — 3 surfaces, 6 personalities | ~85 |
+| `docs/troubleshooting.md` | UPDATED — 6 personalities, hook debugging | ~115 |
+
+---
+
+## 1.0.0 — 2026-04-28
 
 *Or: The First One. All of It. No Empty Promises.*
 

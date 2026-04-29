@@ -94,7 +94,7 @@ touch ~/.claude/MEMORY.md
 
 **Cause:** `set -euo pipefail` at the top means any error kills the process silently. It's the bash equivalent of walking out of a room without explaining why.
 
-**Fix:** Check that all 5 personality directories exist:
+**Fix:** Check that all 6 personality directories exist:
 ```bash
 ls /Volumes/Storage/Dr_ClaudeGoode/personalities/*/surfaces/CLAUDE.md
 ```
@@ -107,3 +107,27 @@ If any are missing, that's your problem. Floyd can't help you if the files aren'
 **Cause:** The personality swap only affects files loaded into the current session's context. Subagents spawned through tmux or other mechanisms load their own context independently. They don't inherit the personality by osmosis.
 
 **Fix:** Each personality's orchestration rules describe how to instruct subagents. The personality doesn't automatically propagate — you'd need to swap in the subagent's session too, or include personality-specific instructions in the subagent prompt. This is a feature, not a bug. Floyd has opinions about subagent autonomy.
+
+---
+
+## Personality Guard Hook
+
+### Tool call blocked with "BLOCKED (personality-guard)"
+
+**Cause:** The PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` intercepted a tool call that violates the active personality's safety rules. The block message tells you which rule was violated.
+
+**Fix:** If the operation is legitimate, you can:
+1. Check which personality is active: `personality-swap --current`
+2. Understand why the hook blocked it — the reason is in the error message
+3. Switch to a personality that allows the operation, or
+4. Temporarily disable the hook by renaming it: `mv ~/.claude/scripts/hooks/personality-guard.js ~/.claude/scripts/hooks/personality-guard.js.disabled`
+
+Floyd recommends option 3. Douglas would probably do option 4. Floyd has feelings about this.
+
+---
+
+### Hook blocks a command I need to run
+
+**Cause:** The personality-specific rules are working as designed. Ops blocks `--no-verify`. Autonomous blocks destructive operations. Sentinel blocks system-changing commands.
+
+**Fix:** Either switch to a personality that allows the operation, or use option 4 above. The universal blocks (governance, settings, power commands) cannot be overridden by personality switching — they protect the infrastructure. Floyd is unapologetic about this.

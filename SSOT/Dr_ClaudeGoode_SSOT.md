@@ -48,7 +48,7 @@ This pattern is deliberate — it reinforces evidence-first thinking and makes t
 
 **Phase:** Active development (lab workspace)
 **Status:** Active
-**Last Agent Session:** 2026-04-28 21:31 UTC
+**Last Agent Session:** 2026-04-29 02:17 UTC
 
 ---
 
@@ -70,9 +70,11 @@ This pattern is deliberate — it reinforces evidence-first thinking and makes t
 - All work is editing text surfaces under `~/.claude/` (settings, hooks, agents, skills, etc.).
 - No build pipeline, no test suite, no server component.
 - Governance compliance is verified via `bootstrap.sh --verify`.
-- Personality Engine (`personality-swap.sh`) swaps L4 surfaces: `~/.claude/CLAUDE.md` (full replacement) and `~/.claude/MEMORY.md` (marker-bounded injection). AGENTS.md is backed up but not swapped (documented gap).
-- 5 personalities (maestro, breeze, sentinel, sage, ops) each provide CLAUDE.md + MEMORY-IDENTITY.md under `personalities/<name>/surfaces/`.
+- Personality Engine (`personality-swap.sh`) swaps L4 surfaces: `~/.claude/CLAUDE.md` (full replacement), `~/.claude/MEMORY.md` (marker-bounded injection), and `~/.claude/rules/common/development-workflow.md` (full replacement). AGENTS.md is backed up but not swapped (documented gap).
+- 6 personalities (maestro, breeze, sentinel, sage, ops, autonomous) each provide CLAUDE.md + MEMORY-IDENTITY.md + rules/development-workflow.md under `personalities/<name>/surfaces/`.
 - Differentiation is verified by `personality-rubric-test.sh` using 10 metrics with 5 validation checks.
+- Verify function runs 7 checks: personality header, MEMORY overlay, state file, governance refs, rules overlay, execution contract, deterministic language audit.
+- Machine-enforced safety via PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js`. Universal blocks on governance/settings/power commands. Personality-specific blocks on destructive ops, --no-verify flags, force pushes.
 
 ---
 
@@ -124,6 +126,9 @@ Every sweep of this SSOT must append one or more entries here. Never edit or rem
 | 2026-04-29 00:15 UTC | Governance parity | FLOYD.md matches floyd-md-template.md structure, all 12 Before You Start steps present, .gitignore matches universal baseline | Side-by-side comparison of FLOYD.md vs /Volumes/Storage/.supercache/templates/floyd-md-template.md | 100% |
 | 2026-04-29 00:15 UTC | Version parity | .supercache/ VERSION = 1.5.0 on both /Volumes/Storage and /Volumes/SanDisk1Tb, identical directory trees | ls both locations, file count and structure match | 100% |
 | 2026-04-29 00:57 UTC | Documentation | Release documentation package generated at docs/release-documentation-1.0.0.md covering all 10 change items (C01–C10) with full traceability | File created, all sections A–G populated with codebase evidence | 100% |
+| 2026-04-29 01:15 UTC | Documentation | Replaced monolithic release doc with proper multi-document structure: README.md, docs/quickstart.md, docs/user-guide.md, docs/release-notes.md, docs/troubleshooting.md, docs/faq.md | All 6 docs created with Floyd brand voice | 100% |
+| 2026-04-29 02:17 UTC | Key architectural choices | All 6 personalities have rules overlays, verify function upgraded from 4→7 checks, personality-guard.js hook installed at ~/.claude/scripts/hooks/ | personality-swap.sh:186-310, personality-guard.js:1-215, all 6 verify runs show 7/7 PASS | 100% |
+| 2026-04-29 02:17 UTC | Machine enforcement | PreToolUse hook mechanically blocks governance writes, settings modifications, destructive ops (per personality). 11/11 hook tests pass | node -e test of hook.run() function | 100% |
 
 ---
 
@@ -133,7 +138,8 @@ Every sweep of this SSOT must append one or more entries here. Never edit or rem
 - 2026-04-28 21:31 UTC — Filled all template placeholders with project-specific values. Verified governance compliance.
 - 2026-04-29 00:15 UTC — Governance parity sweep: updated Project Structure tree to include all project content (personalities/, docs/, scripts), expanded Key architectural choices with Personality Engine details, added verification log entries for parity check.
 - 2026-04-29 00:57 UTC — Generated pre-release documentation package at docs/release-documentation-1.0.0.md. Full traceability for all 10 change items.
-- 2026-04-29 01:15 UTC — Replaced monolithic release doc with proper multi-document structure: README.md (project root), docs/quickstart.md, docs/user-guide.md, docs/release-notes.md, docs/troubleshooting.md, docs/faq.md. Applied Floyd's Labs brand voice. Removed docs/release-documentation-1.0.0.md.
+- 2026-04-29 01:15 UTC — Replaced monolithic release doc with proper multi-document structure: README.md, docs/quickstart.md, docs/user-guide.md, docs/release-notes.md, docs/troubleshooting.md, docs/faq.md. Applied Floyd's Labs brand voice.
+- 2026-04-29 02:17 UTC — v1.1.0 update: added rules overlays for breeze, sentinel, sage, ops (all 6 personalities now have complete surface coverage). Built personality-guard.js PreToolUse hook with universal and personality-specific safety enforcement. Upgraded verify function from 4 checks to 7. Updated all 6 docs to reflect changes. Hardened sentinel CLAUDE.md deterministic language.
 
 <!-- Append new entries BELOW this comment line, in chronological order. -->
 <!-- Never edit or remove existing entries — this is the authoritative change history. -->

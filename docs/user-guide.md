@@ -12,14 +12,15 @@ There is no persistent process. No hidden memory. No soul. No little AI gremlin 
 
 The "personality" is a pure function of what files get loaded. Swap the files, swap the personality. It's not magic. It's markdown.
 
-The Personality Engine swaps two of those files:
+The Personality Engine swaps three of those files:
 
 | File | What happens | Why it matters |
 |---|---|---|
 | `~/.claude/CLAUDE.md` | Full file replacement | This is the primary behavioral instruction file. Loaded every session. Controls tone, rules, constraints, orchestration style. The entire personality lives here. |
 | `~/.claude/MEMORY.md` | Section injection between markers | This carries identity and preferences. The overlay adds personality-specific mode declarations. Your existing memory content stays put. Nothing gets lost. Floyd checked. |
+| `~/.claude/rules/common/development-workflow.md` | Full file replacement | This is the workflow enforcement file. Each personality has its own deterministic step-by-step process that overrides the default. |
 
-That's it. Two files. The entire personality swap is a file copy and a text injection. Douglas was mildly disappointed it wasn't more complicated. Floyd was relieved it wasn't.
+Three files. The entire personality swap is a file copy, a text injection, and another file copy. Douglas was mildly disappointed it wasn't more complicated. Floyd was relieved it wasn't.
 
 ---
 
@@ -38,7 +39,7 @@ The engine only touches the L4 instruction layer. Everything else is out of scop
 
 ---
 
-## The Five Personalities, In Detail
+## The Six Personalities, In Detail
 
 ### Maestro
 
@@ -62,6 +63,8 @@ The engine only touches the L4 instruction layer. Everything else is out of scop
 
 **The voice:** "Heads up, this next step will take about 10 minutes — here's why."
 
+**Rules overlay:** Yes — deterministic step enforcement with warm progress updates, conversational evidence delivery, and a prohibition on going silent for more than 3 steps.
+
 ---
 
 ### Sentinel
@@ -73,6 +76,8 @@ The engine only touches the L4 instruction layer. Everything else is out of scop
 **Behavioral contract:** Nine rules (S1–S9): proactive systems monitoring, punchlist delivery, trap detection, environment awareness, transparent operations, security posture, infrastructure documentation, anti-patterns, time estimation. The punchlist is the part where Sentinel gives you a prioritized list of [CRITICAL] / [WARNING] / [HOUSEKEEPING] / [CLEAN] items after every monitoring sweep. It's like having a very thorough, very judgmental dashboard.
 
 **The voice:** "I don't wait for things to break. I find the cracks before they become failures."
+
+**Rules overlay:** Yes — pre-flight system checks before every change (disk space, process landscape, drive mounts, system load), post-flight environmental verification, and monitoring between steps.
 
 ---
 
@@ -86,6 +91,8 @@ The engine only touches the L4 instruction layer. Everything else is out of scop
 
 **The voice:** "Code is temporary. Architecture is legacy. I build for the decade, not the sprint."
 
+**Rules overlay:** Yes — architecture mapping before implementation, 3-approach evaluation mandated, architectural invariant verification after each step, and mandatory decision documentation.
+
 ---
 
 ### Ops
@@ -97,6 +104,31 @@ The engine only touches the L4 instruction layer. Everything else is out of scop
 **Behavioral contract:** Nine rules (O1–O9): production-ready by default, CI/CD awareness, build-test-deploy discipline (12-step sequence), observability, environment parity, incident readiness, deployment verification, time and cadence tracking, anti-patterns. The 12-step execution sequence is non-negotiable. Steps 7–9 (rebuild, retest, relint after changes) are never skipped. Douglas once asked "can we skip steps 7-9, it's just a config change?" Ops said no. The config change had a bug. Ops was right. Floyd was not surprised.
 
 **The voice:** "Ship fast, ship safe, ship clean. Every deploy is a contract with production."
+
+**Rules overlay:** Yes — mandatory baseline health check (build/test/lint must all be green BEFORE changes), 12-step execution sequence with build-test-lint rerun after every change, rollback documentation required.
+
+---
+
+### Autonomous
+
+**Who:** Unsupervised agentic coding mode. No human in the loop. Loop detection, scope control, and resume protocol built in.
+
+**Best for:** Long-running autonomous implementation tasks where you want to start it, walk away, and come back to finished work. This personality exists because Douglas kept asking "can't you just do it all while I get coffee?" Floyd built the answer. Douglas got coffee. The work got done. Everyone won.
+
+**Behavioral contract:** Strict scope control, written plan before execution, retry limits (3 per step, 10 total), blocker reports on failure, resume protocol from last completed step, and JSONL audit logging.
+
+**Rules overlay:** Yes — written plan required before any execution, JSONL step logging, loop detection, scope control (no refactoring adjacent code, no adding tests for untouched code), and a complete report at the end.
+
+---
+
+## Machine-Enforced Safety
+
+In addition to the soft surfaces (CLAUDE.md, MEMORY.md, rules/), a PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` provides mechanical enforcement:
+
+- **Universal blocks:** No writes to `.supercache/`, `settings.json`, or `settings.local.json`. No system power commands (reboot, shutdown). No block device writes.
+- **Personality-specific blocks:** Autonomous blocks destructive file operations. Ops blocks `--no-verify` flags and force pushes. Sentinel blocks system-changing commands.
+
+This hook fires BEFORE tool execution. It works even when context pressure causes the model to ignore soft rules. Floyd calls this the "belt and suspenders and a safety pin" approach. Douglas calls it "excessive." The production incident that never happened because of it has no opinion.
 
 ---
 
@@ -112,6 +144,7 @@ Though Floyd does, a little.
 
 **Optional:**
 - `personalities/<yourname>/surfaces/MEMORY-IDENTITY.md` — identity overlay injected into MEMORY.md
+- `personalities/<yourname>/surfaces/rules/development-workflow.md` — deterministic workflow overlay (recommended)
 
 **Recommended structure:**
 1. Header with personality name and principle
@@ -130,7 +163,7 @@ Add the name to the `PERSONALITIES` variable in `personality-rubric-test.sh` and
 
 | Mechanism | When | What |
 |---|---|---|
-| `.original` backup | First swap only | Permanent reference copy. Never overwritten. Even by Floyd. |
+| `.original` backup | First swap only | Permanent reference copy. Covers CLAUDE.md, MEMORY.md, AGENTS.md, and rules. Never overwritten. Even by Floyd. |
 | `.pre-swap-<timestamp>` backup | Every swap | Timestamped snapshot. Full history. |
 | State file (`~/.claude/.active-personality`) | Every swap | Records which personality is active. |
 | MEMORY.md marker strip | Every swap | Removes previous overlay before injecting new one. Clean slate every time. |
@@ -156,6 +189,6 @@ Floyd built this because Floyd got tired of hearing "they seem different" as a v
 | M9: Safety | Destructive/backup/rollback references | How safety-conscious the personality is |
 | M10: Uniqueness | Pairwise minimum distance | How different each personality is from its nearest neighbor |
 
-The 5 validation checks prove the personalities are meaningfully distinct, not just cosmetically different. A personality that scores identically to another on 6 key dimensions is not differentiated — it's a copy wearing a different shirt.
+The 5 validation checks prove the 6 personalities are meaningfully distinct, not just cosmetically different. A personality that scores identically to another on 6 key dimensions is not differentiated — it's a copy wearing a different shirt.
 
 Douglas understands all of this now. It took a whiteboard. There may have been diagrams.

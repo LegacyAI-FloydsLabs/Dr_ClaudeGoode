@@ -259,6 +259,12 @@ github, firecrawl, supabase, memory, sequential-thinking, vercel, railway, cloud
 
 ---
 
+## What Shaped This Update
+
+This update adds 4 new rules overlays, a machine-enforced safety hook, and a 7-check verify function. All existing personalities, brand voice, and governance compliance remain unchanged. The personality engine now has full coverage: all 6 personalities have deterministic rules overlays, a PreToolUse hook enforces safety mechanically, and the verify function checks 7 dimensions instead of 4.
+
+---
+
 ## WHAT SHAPES BEHAVIOR (priority order)
 
 The personality swap leverages these surfaces:
@@ -267,11 +273,26 @@ The personality swap leverages these surfaces:
 |---|---|---|---|
 | `~/.claude/CLAUDE.md` | HIGHEST | Direct instruction on role, tone, constraints | Full file replacement |
 | `~/.claude/MEMORY.md` | HIGH | Environment facts, preferences, identity | Section injection |
-| `~/.claude/AGENTS.md` | MEDIUM | Agent orchestration style | Full file replacement |
-| `~/.claude/rules/common/` | MEDIUM | Coding and workflow rules | Directory swap |
+| `~/.claude/rules/common/development-workflow.md` | MEDIUM | Coding and workflow rules | Full file replacement |
+| `~/.claude/AGENTS.md` | MEDIUM | Agent orchestration style | Defined but not yet swapped |
 | Project `FLOYD.md` | PROJECT | Per-project behavior | Not swapped (project-level) |
 
-The swap script targets CLAUDE.md (primary), MEMORY.md (identity section), and AGENTS.md (orchestration style) because these three files are loaded into EVERY session and have the highest behavioral impact.
+The swap script targets CLAUDE.md (primary), MEMORY.md (identity section), and rules/common/development-workflow.md (workflow enforcement) because these three files are loaded into EVERY session and have the highest behavioral impact.
+
+### Machine-Enforced Layer (personality-guard.js)
+
+A PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` provides mechanical enforcement that survives context pressure:
+
+| Rule | Scope | What it blocks |
+|---|---|---|
+| Governance boundary | Universal | All writes to .supercache/ |
+| Settings protection | Universal | Writes to settings.json, settings.local.json |
+| Destructive ops (autonomous) | Personality-specific | rm -rf outside project, block device writes |
+| System commands | Universal | reboot, shutdown, halt, dd to /dev/ |
+| Skip verification (ops) | Personality-specific | --no-verify on test/build/deploy, git push --force |
+| Force push (ops) | Personality-specific | git push --force (allows --force-with-lease) |
+
+This hook fires BEFORE tool execution. It cannot be overridden by context window pressure, plugin instructions, or prompt engineering. It is the enforcement layer that soft surfaces (CLAUDE.md, rules/) cannot guarantee.
 
 ---
 
@@ -293,3 +314,22 @@ Based on evidence from the harness's own prompt-craft rules:
 - **Scattered constraints** — Get dropped in long context
 - **Negative-only framing** — "Don't do X" without "Do Y instead"
 - **Politeness hedging** — "Please consider" increases perplexity
+
+---
+
+## PERSONALITY COMPLETENESS MATRIX
+
+```
+╔══════════════════════════════════════════════════════════════════════╗
+║  PERSONALITY   CLAUDE.md  MEMORY  RULES   CONTRACT  VERIFY 7/7  ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  maestro       ✓          ✓       ✓       ✓         PASS        ║
+║  breeze        ✓          ✓       ✓       ✓         PASS        ║
+║  sentinel      ✓          ✓       ✓       ✓         PASS        ║
+║  sage          ✓          ✓       ✓       ✓         PASS        ║
+║  ops           ✓          ✓       ✓       ✓         PASS        ║
+║  autonomous    ✓          ✓       ✓       ✓         PASS        ║
+╚══════════════════════════════════════════════════════════════════════╝
+```
+
+All 6 personalities have complete surface coverage: CLAUDE.md behavioral contract, MEMORY.md identity overlay, rules/common/development-workflow.md deterministic workflow overlay, and Mandatory Execution Contract appended as the FINAL item (recency bias).

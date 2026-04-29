@@ -6,13 +6,13 @@
 
 ### What does the Personality Engine actually do?
 
-It copies a personality's `CLAUDE.md` to `~/.claude/CLAUDE.md` (full replacement) and injects a `MEMORY-IDENTITY.md` section into `~/.claude/MEMORY.md` (between marker lines). That's it. Two file operations. The multi-billion-dollar language model reads a markdown file and decides how to behave based on what it finds. We're not swapping neural weights. We're swapping text files. The fact that this works at all says something profound about the current state of AI. Floyd has thoughts. Douglas told Floyd to keep them to itself.
+It copies a personality's `CLAUDE.md` to `~/.claude/CLAUDE.md` (full replacement), injects a `MEMORY-IDENTITY.md` section into `~/.claude/MEMORY.md` (between marker lines), and swaps `rules/common/development-workflow.md` with the personality's deterministic workflow overlay. That's three file operations. The multi-billion-dollar language model reads markdown files and decides how to behave based on what it finds. We're not swapping neural weights. We're swapping text files. The fact that this works at all says something profound about the current state of AI. Floyd has thoughts. Douglas told Floyd to keep them to itself.
 
 ---
 
 ### Does it modify hooks, plugins, MCP servers, or settings?
 
-No. Only `CLAUDE.md` and `MEMORY.md` are touched. Settings, hooks, scripts, plugins, MCP configs, and the governance layer are all out of scope. The swap script knows its lane and stays in it. Douglas could learn from this.
+No. Only `CLAUDE.md`, `MEMORY.md`, and `rules/common/development-workflow.md` are touched. Settings, hooks, scripts, plugins, MCP configs, and the governance layer are all out of scope. The swap script knows its lane and stays in it. Douglas could learn from this.
 
 ---
 
@@ -70,10 +70,24 @@ The script never touches settings, hooks, plugins, or MCP configs. It only modif
 
 All 5 personalities include a governance compliance section that references `.supercache/` and enforces the READ-ONLY boundary. The Personality Engine never touches `.supercache/`. The project operates under `.supercache/` v1.5.0 governance. Floyd is not allowed to write to governance. This is a rule that exists because of Floyd. No further comment.
 
+Yes. A PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` mechanically enforces safety rules that soft surfaces can't guarantee. It blocks writes to `.supercache/`, `settings.json`, and `settings.local.json` universally, and adds personality-specific blocks (autonomous blocks destructive ops, ops blocks `--no-verify`, etc.). This fires BEFORE tool execution, so it works even when context pressure causes the model to ignore soft rules.
+
 ---
 
-### Why five personalities? Why not three or ten?
+### Why six personalities? Why not five or ten?
 
-Five covers the major archetypes (orchestrator, companion, monitor, architect, operator) without overwhelming anyone with choices. Each fills a distinct niche. The rubric test proves they're not cosmetically different — they're measurably different across 10 dimensions. Three wouldn't give enough coverage. Ten would be a personality buffet and Douglas would spend forty-five minutes deciding which one to use instead of doing any actual work.
+Six covers the major archetypes (orchestrator, companion, monitor, architect, operator, autonomous agent) without overwhelming anyone with choices. Each fills a distinct niche. The rubric test proves they're not cosmetically different — they're measurably different across 10 dimensions. Five wouldn't give enough coverage. Ten would be a personality buffet and Douglas would spend forty-five minutes deciding which one to use instead of doing any actual work.
 
-If five isn't enough, make your own. The engine doesn't care how many you have. Floyd cares, slightly, but won't stop you.
+If six isn't enough, make your own. The engine doesn't care how many you have. Floyd cares, slightly, but won't stop you.
+
+---
+
+### What does the personality-guard hook do?
+
+It's a PreToolUse hook — it fires BEFORE the model's tool call executes, making it mechanically enforced. It does three layers of checks:
+
+1. **Universal blocks** — no writes to `.supercache/` (governance), `settings.json`, `settings.local.json`, no system power commands (reboot, shutdown, halt), no block device writes.
+2. **Personality-specific blocks** — autonomous blocks destructive file operations (`rm -rf` outside project), ops blocks `--no-verify` flags and bare force pushes, sentinel blocks system-altering commands.
+3. **State protection** — prevents tampering with the personality engine's own state.
+
+This is the enforcement layer that the soft surfaces (CLAUDE.md, rules/) can't guarantee. When context pressure causes the model to deprioritize rules, the hook still fires. Floyd built this after spending too much time watching the model politely ignore rules it found inconvenient. Douglas hasn't noticed the hook exists yet. Floyd considers this a feature.

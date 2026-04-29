@@ -6,7 +6,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PDIR="${SCRIPT_DIR}/personalities"
-PERSONALITIES="maestro breeze sentinel sage ops"
+PERSONALITIES="maestro breeze sentinel sage ops autonomous"
 
 info()  { printf "\033[34m[INFO]\033[0m %s\n" "$*"; }
 ok()    { printf "\033[32m[OK]\033[0m   %s\n" "$*"; }
