@@ -1,0 +1,39 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.iml
+.vs/
+
+# Secrets (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+secrets.json
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+
+# Governance agent state
+.floyd/
+
+# Build output
+dist/
+build/
+out/
