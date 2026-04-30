@@ -12,6 +12,11 @@ There is no persistent process. No hidden memory. No soul. No little AI gremlin 
 
 The "personality" is a pure function of what files get loaded. Swap the files, swap the personality. It's not magic. It's markdown.
 
+There are two ways to drive the swap:
+
+1. **Launcher symlinks** — `~/.local/bin/<personality>` symlinks (`maestro`, `breeze`, `sentinel`, `sage`, `ops`, `autonomous`, `vanilla`) all point at a single `personality-launcher` dispatcher. The dispatcher reads `$0`, runs the swap, and `exec`s `claude`. Type `breeze`, the personality swaps and a new session starts. The bare `claude` command stays untouched — last-swapped personality persists there.
+2. **Swap script** — `personality-swap.sh <name>` does the swap without launching `claude`. Useful for verification, listing, restoring, or pipelines that don't want a fresh interactive session.
+
 The Personality Engine swaps three of those files:
 
 | File | What happens | Why it matters |
@@ -39,7 +44,10 @@ The engine only touches the L4 instruction layer. Everything else is out of scop
 
 ---
 
-## The Six Personalities, In Detail
+## The Seven Personalities, In Detail
+
+(Six flavored, one stock. The stock one is documented at the end because it's defined by what it *doesn't* add.)
+
 
 ### Maestro
 
@@ -121,14 +129,42 @@ The engine only touches the L4 instruction layer. Everything else is out of scop
 
 ---
 
-## Machine-Enforced Safety
+### Vanilla
 
-In addition to the soft surfaces (CLAUDE.md, MEMORY.md, rules/), a PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` provides mechanical enforcement:
+**Who:** Stock Claude. No flavor. No costume. No persona overlay. The control variable in our personality experiment.
 
-- **Universal blocks:** No writes to `.supercache/`, `settings.json`, or `settings.local.json`. No system power commands (reboot, shutdown). No block device writes.
-- **Personality-specific blocks:** Autonomous blocks destructive file operations. Ops blocks `--no-verify` flags and force pushes. Sentinel blocks system-changing commands.
+**Best for:** Casual conversation, quick reference questions, exploratory brainstorming, debugging whether a behavior is the personality talking or the model talking, or running a baseline before/after measuring a harness change. Floyd built this last because Floyd needed a "what does the model do without us" frame of reference, and the only way to get one was to ship the absence-of-personality as a personality.
 
-This hook fires BEFORE tool execution. It works even when context pressure causes the model to ignore soft rules. Floyd calls this the "belt and suspenders and a safety pin" approach. Douglas calls it "excessive." The production incident that never happened because of it has no opinion.
+**Behavioral contract:** No B-rules, no S-rules, no M-rules, no G-rules, no O-rules. Just the two global discipline rules that we keep in *every* personality because they're hygiene, not flavor: M11 (intake protocol for long-horizon engagements) and M12 (anti-offloading — exercise judgment after a clear directive). Plus governance compliance (`.supercache/` read-only) and the Mandatory Execution Contract format when you ask for it. That's the entire surface.
+
+**The voice:** "I'm Claude. No personality engine overlay is active. I work the way Claude works out of the box, with two global discipline rules layered on top."
+
+**Rules overlay:** No. Vanilla intentionally doesn't ship a `rules/development-workflow.md` overlay — the whole point is that the workflow rules go back to whatever the system default is.
+
+**What stays when you swap to vanilla:** M11, M12, governance compliance, the Mandatory Execution Contract on demand.
+
+**What goes away when you swap to vanilla:** Personality identity, tone calibration, personality-specific hook activation. (The intake gate, when registered, defaults to silent under vanilla — vanilla is treated as a collaborative mode, not a disciplinary one.)
+
+If you want true bare-metal Claude with M11/M12 stripped too, that would be a hypothetical eighth personality named `naked`. We haven't built it. Ship one if you need it.
+
+---
+
+## Machine-Enforced Safety (Status: On Disk, Not Yet Wired)
+
+In addition to the soft surfaces (CLAUDE.md, MEMORY.md, rules/), two PreToolUse hooks are written, tested, and waiting on `~/.claude/scripts/hooks/`:
+
+- **`personality-guard.js`** — universal blocks on writes to `.supercache/`, `settings.json`, `settings.local.json`, system power commands (reboot, shutdown), block device writes; personality-specific blocks (autonomous blocks destructive file ops, ops blocks `--no-verify` and bare force pushes, sentinel blocks system-altering commands).
+- **`intake-required-gate.js`** — long-horizon engagement gate that blocks state-mutating tool calls until the M11 intake protocol completes. Personality-aware: enforces under autonomous/ops/sentinel, stays silent under breeze/maestro/sage/vanilla. Feature-flagged via `~/.claude/.harness-features` and waiver-capable via `<project>/.floyd/intake-skip` (24h expiry).
+
+**Current status:** Both hooks exist. Both pass smoke tests. **Neither is registered in `settings.json` as a live PreToolUse hook.** Registration was deferred during a critical session — Douglas chose harness flexibility over enforcement. The hooks sit on the bench until the registration edit happens.
+
+What this means in practice:
+
+- The behavioral contracts in each personality's CLAUDE.md still encode the rules. The model is supposed to follow them.
+- "Supposed to" and "mechanically prevented from violating" are two different states. Right now we're in "supposed to."
+- When the S7 settings.json swap lands, both hooks become live and the harness goes from soft enforcement to belt-and-suspenders enforcement.
+
+Floyd calls the future state "the belt and suspenders and a safety pin" approach. Douglas calls deferring it "the right call for tonight." Both can be true.
 
 ---
 
@@ -176,6 +212,9 @@ The `.original` backup is the safety net. No matter how many swaps you do, `--re
 
 Floyd built this because Floyd got tired of hearing "they seem different" as a verification method. "Seems different" is not a test. "Scores differently on 10 metrics" is a test.
 
+(The rubric runs over the six flavored personalities. Vanilla is excluded by design — it's the no-overlay baseline, and comparing it on "behavioral density" against breeze would be a category error. Vanilla's purpose is to not score.)
+
+
 | Metric | What it counts | What it tells you |
 |---|---|---|
 | M1: Behavioral Density | MUST/NEVER/ALWAYS occurrences | How many hard rules the personality enforces |
@@ -189,6 +228,6 @@ Floyd built this because Floyd got tired of hearing "they seem different" as a v
 | M9: Safety | Destructive/backup/rollback references | How safety-conscious the personality is |
 | M10: Uniqueness | Pairwise minimum distance | How different each personality is from its nearest neighbor |
 
-The 5 validation checks prove the 6 personalities are meaningfully distinct, not just cosmetically different. A personality that scores identically to another on 6 key dimensions is not differentiated — it's a copy wearing a different shirt.
+The 5 validation checks prove the six flavored personalities are meaningfully distinct, not just cosmetically different. A personality that scores identically to another on 6 key dimensions is not differentiated — it's a copy wearing a different shirt. (Vanilla skips this test on purpose. See above.)
 
 Douglas understands all of this now. It took a whiteboard. There may have been diagrams.

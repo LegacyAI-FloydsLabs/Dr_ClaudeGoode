@@ -15,23 +15,43 @@ If you're missing either of those, no amount of documentation is going to help y
 
 ---
 
+## The Two Paths
+
+Before we get into steps: there are two ways to drive this thing now. The launcher symlinks (faster) and the swap script (more verbose, equally functional). Pick one and stick with it, or use both depending on mood. Floyd doesn't judge. Floyd judges a little.
+
+**Launcher symlinks** — `~/.local/bin/<personality>` are seven symlinks (`maestro`, `breeze`, `sentinel`, `sage`, `ops`, `autonomous`, `vanilla`) pointing at a tiny dispatcher called `personality-launcher`. Type the personality name, the dispatcher swaps and `exec`s `claude`. One word, one new session, done.
+
+**Swap script** — `personality-swap.sh` does the same swap without launching `claude`. Useful for verification, listing, restoring, or for pipelines that don't want a fresh interactive session.
+
+---
+
 ## Step 1: Pick a Personality
 
 ```bash
 /Volumes/Storage/Dr_ClaudeGoode/personality-swap.sh --list
 ```
 
-You'll see all six with their descriptions. Pick whichever one matches the kind of session you want. Or the one that sounds like it would annoy Douglas the most. Your call.
+You'll see all seven with their descriptions. Pick whichever one matches the kind of session you want. Or the one that sounds like it would annoy Douglas the most. Your call.
 
 ---
 
 ## Step 2: Activate It
 
+The fast way:
+
+```bash
+sentinel
+```
+
+That's a launcher symlink. It runs the swap and starts `claude` in one motion.
+
+The verbose way (still works):
+
 ```bash
 /Volumes/Storage/Dr_ClaudeGoode/personality-swap.sh sentinel
 ```
 
-The script does three things, none of which require you to understand bash scripting:
+Either path, the script does three things, none of which require you to understand bash scripting:
 
 1. **Backs up your originals** — `~/.claude/CLAUDE.md`, `~/.claude/MEMORY.md`, and `~/.claude/rules/common/development-workflow.md` get timestamped copies in `~/.claude/personality-backup/`. First swap also saves permanent `.original` copies. This was Floyd's idea. Douglas thought backups were "unnecessary." Douglas was wrong. Floyd said nothing and built them anyway.
 
@@ -67,6 +87,8 @@ This is the part people forget. Including Douglas. Twice.
 
 Claude Code loads its instruction files at session start. If you had a session running when you swapped, that session still has the old personality. It's not magic. It's a stateless API call. Open a new session.
 
+If you used a launcher symlink (`maestro`, `breeze`, etc.), step 4 already happened. The dispatcher swaps *and* launches a fresh `claude` for you. This is the entire reason the launchers exist.
+
 ---
 
 ## Changing Personalities
@@ -97,7 +119,7 @@ Copies the `.original` backup files back and removes the state file. You're back
 /Volumes/Storage/Dr_ClaudeGoode/personality-rubric-test.sh --static
 ```
 
-This runs 10 metrics across all 6 personalities and checks five things:
+This runs 10 metrics across the six flavored personalities and checks five things. (Vanilla is excluded by design — it's the no-overlay baseline. Comparing vanilla against breeze on "behavioral density" would be like comparing an unsalted cracker against a sandwich. Different category.)
 
 1. No two personalities are identical
 2. At least 3 unique domain specializations

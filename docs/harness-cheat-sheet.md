@@ -259,9 +259,21 @@ github, firecrawl, supabase, memory, sequential-thinking, vercel, railway, cloud
 
 ---
 
-## What Shaped This Update
+## What Shaped This Update (1.2.0)
 
-This update adds 4 new rules overlays, a machine-enforced safety hook, and a 7-check verify function. All existing personalities, brand voice, and governance compliance remain unchanged. The personality engine now has full coverage: all 6 personalities have deterministic rules overlays, a PreToolUse hook enforces safety mechanically, and the verify function checks 7 dimensions instead of 4.
+The 1.1.0 update added 4 rules overlays, the verify function went from 4 checks to 7, and `personality-guard.js` was written as a PreToolUse safety hook.
+
+The 1.2.0 update added:
+- **M11 INTAKE PROTOCOL** appended to all seven personalities (long-horizon engagements only)
+- **M12 EXERCISE JUDGMENT** appended to all seven personalities (anti-offloading after a clear directive)
+- **Vanilla personality** — stock Claude with M11/M12 retained, no flavor overlay
+- **Launcher symlinks** at `~/.local/bin/<personality>` for one-word personality activation
+- **`intake-required-gate.js`** — the second PreToolUse hook (also on disk, also tested)
+- **ATerm MCP server** registered in `~/.claude.json`
+
+The personality engine now has seven personalities (six flavored, one stock), all six flavored personalities still pass `--verify` at 7/7, and the M11+M12 appendix is in every CLAUDE.md.
+
+**Honest disclosure on machine enforcement:** Both PreToolUse hooks (`personality-guard.js` and `intake-required-gate.js`) exist on disk at `~/.claude/scripts/hooks/`. **Neither is currently registered in `~/.claude/settings.json` as a live hook.** The S7 settings.json swap (one edit, backup at `.floyd/settings.json.bak.20260430-pre-S7`) was deferred during a critical session. Until that edit lands, the rules live in CLAUDE.md text but are not mechanically enforced. We're documenting this honestly because pretending otherwise would defeat the entire point of having the harness in the first place.
 
 ---
 
@@ -279,9 +291,13 @@ The personality swap leverages these surfaces:
 
 The swap script targets CLAUDE.md (primary), MEMORY.md (identity section), and rules/common/development-workflow.md (workflow enforcement) because these three files are loaded into EVERY session and have the highest behavioral impact.
 
-### Machine-Enforced Layer (personality-guard.js)
+### Machine-Enforcement Layer (designed, on disk, registration pending)
 
-A PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` provides mechanical enforcement that survives context pressure:
+Two PreToolUse hooks are written and tested at `~/.claude/scripts/hooks/`. **Neither is currently registered in `settings.json` as a live hook** — registration was deferred during a critical session, with backup taken at `.floyd/settings.json.bak.20260430-pre-S7`.
+
+Once registered, these hooks fire BEFORE tool execution and provide enforcement that survives context pressure.
+
+**`personality-guard.js`:**
 
 | Rule | Scope | What it blocks |
 |---|---|---|
@@ -292,7 +308,17 @@ A PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` provides mec
 | Skip verification (ops) | Personality-specific | --no-verify on test/build/deploy, git push --force |
 | Force push (ops) | Personality-specific | git push --force (allows --force-with-lease) |
 
-This hook fires BEFORE tool execution. It cannot be overridden by context window pressure, plugin instructions, or prompt engineering. It is the enforcement layer that soft surfaces (CLAUDE.md, rules/) cannot guarantee.
+**`intake-required-gate.js`:**
+
+| Rule | Scope | What it blocks |
+|---|---|---|
+| Long-horizon intake required | Disciplinary personalities only (autonomous, ops, sentinel) | State-mutating tool calls until `.floyd/engagement-intake-*.md` exists or `.floyd/intake-skip` waiver is in place |
+| Master kill switch | Universal feature flag | `~/.claude/.harness-features` `{"intake_gate": false}` disables gate entirely |
+| Read-only allowlist | Universal | Read-only Bash (ls, cat, git log, find, grep, etc.) always permitted, even pre-intake |
+
+The intake gate is personality-aware by design: it only enforces under disciplinary modes (autonomous, ops, sentinel) and stays silent under collaborative modes (breeze, maestro, sage, vanilla). This makes safety hot-swappable rather than monolithic.
+
+**Current enforcement state:** soft (rule text in CLAUDE.md). **Future enforcement state, after registration:** belt and suspenders. Documented honestly so nobody confuses "designed" with "active."
 
 ---
 
@@ -320,16 +346,19 @@ Based on evidence from the harness's own prompt-craft rules:
 ## PERSONALITY COMPLETENESS MATRIX
 
 ```
-╔══════════════════════════════════════════════════════════════════════╗
-║  PERSONALITY   CLAUDE.md  MEMORY  RULES   CONTRACT  VERIFY 7/7  ║
-╠══════════════════════════════════════════════════════════════════════╣
-║  maestro       ✓          ✓       ✓       ✓         PASS        ║
-║  breeze        ✓          ✓       ✓       ✓         PASS        ║
-║  sentinel      ✓          ✓       ✓       ✓         PASS        ║
-║  sage          ✓          ✓       ✓       ✓         PASS        ║
-║  ops           ✓          ✓       ✓       ✓         PASS        ║
-║  autonomous    ✓          ✓       ✓       ✓         PASS        ║
-╚══════════════════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════════════════╗
+║  PERSONALITY   CLAUDE.md  MEMORY  RULES   CONTRACT  M11+M12  VERIFY 7/7  ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║  maestro       ✓          ✓       ✓       ✓         ✓        PASS         ║
+║  breeze        ✓          ✓       ✓       ✓         ✓        PASS         ║
+║  sentinel      ✓          ✓       ✓       ✓         ✓        PASS         ║
+║  sage          ✓          ✓       ✓       ✓         ✓        PASS         ║
+║  ops           ✓          ✓       ✓       ✓         ✓        PASS         ║
+║  autonomous    ✓          ✓       ✓       ✓         ✓        PASS         ║
+║  vanilla       ✓          ✓       —       ✓         ✓        N/A          ║
+╚════════════════════════════════════════════════════════════════════════════╝
 ```
 
-All 6 personalities have complete surface coverage: CLAUDE.md behavioral contract, MEMORY.md identity overlay, rules/common/development-workflow.md deterministic workflow overlay, and Mandatory Execution Contract appended as the FINAL item (recency bias).
+The six flavored personalities have full surface coverage: CLAUDE.md behavioral contract, MEMORY.md identity overlay, rules/common/development-workflow.md deterministic workflow overlay, the Mandatory Execution Contract appended as the FINAL item (recency bias), and M11 (intake) + M12 (anti-offloading) appended as global discipline rules.
+
+Vanilla intentionally omits the rules overlay and is excluded from the rubric test by design — it's the no-overlay baseline. M11 + M12 still apply because those are global discipline rules, not personality flavor.

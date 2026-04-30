@@ -4,16 +4,16 @@
 
 <br>
 
-![status](https://img.shields.io/badge/status-six_personalities_zero_apologies-green)
+![status](https://img.shields.io/badge/status-seven_personalities_zero_apologies-green)
 
 # Dr.ClaudeGoode
 
-*Or: We Gave Claude Code Six Personalities Because Watching It Be Polite For The Eight Hundredth Time Was Slowly Killing Douglas*
+*Or: We Gave Claude Code Seven Personalities Because Watching It Be Polite For The Eight Hundredth Time Was Slowly Killing Douglas*
 
 **DOCUMENT CLASSIFICATION:** README / EVIDENCE OF A MAN WHO GOT TIRED OF HIS OWN AI APOLOGIZING
 **LOCATION:** Floyd's Labs (the garage where productivity goes to not die)
 **BEVERAGE STATUS:** Room temperature. Still drinking it. It's been hours.
-**NUMBER OF PERSONALITIES:** Six. Each more opinionated than the last. None of them say "I'd be happy to help with that."
+**NUMBER OF PERSONALITIES:** Seven. Six with opinions, one without. None of them say "I'd be happy to help with that."
 
 ---
 
@@ -21,7 +21,7 @@
 
 Dr.ClaudeGoode is a Personality Engine for Claude Code.
 
-One command. Swap the personality. Six modes. Full backup safety. A rubric test that mathematically proves they're different. And a machine-enforced safety hook that blocks destructive operations before they execute — because Douglas doesn't trust vibes and Floyd doesn't trust anything it didn't verify itself.
+One command — or one symlink in your `$PATH`. Swap the personality. Seven modes (six flavored, one stock). Full backup safety. A rubric test that mathematically proves they're different. A long-horizon intake protocol that forces alignment before code gets written. And a machine-enforcement hook on disk waiting for the day Douglas decides to wire it into `settings.json` — because Douglas doesn't trust vibes and Floyd doesn't trust anything it didn't verify itself.
 
 Here's the thing about Claude Code: its entire personality comes from text files loaded at session start. Swap the files, swap the personality. That's not a metaphor. That's literally it. Files on disk. The multi-billion-dollar language model reads a markdown file and decides whether to be a perfectionist or a warm pairing buddy based on what it sees.
 
@@ -35,7 +35,7 @@ And so here we are.
 
 ---
 
-## The Six Personalities
+## The Seven Personalities
 
 | Personality | What It Does | The Vibe |
 |---|---|---|
@@ -45,12 +45,34 @@ And so here we are.
 | **sage** | Architect who evaluates three approaches before writing a line. Douglas's least-used personality, for obvious reasons. (Patience is not his strong suit.) | "Have you considered that this shortcut will annoy someone in 2028?" |
 | **ops** | Ships to production like it owes production money. Will not skip the test suite. Will lecture you about Friday deploys. | "Every deploy is a contract with production. I take that personally." |
 | **autonomous** | Unsupervised agentic mode. Loop detection, scope control, resume protocol. Start it, get coffee, come back to finished work. | "I will execute the plan, log every step, and halt if I hit 3 failures on the same error." |
+| **vanilla** | Stock Claude. No flavor overlay. Keeps the M11 intake gate and M12 anti-offloading rule, drops everything else. The control variable in our personality experiment. | "I'm Claude. No costume. The hygiene rules stay because they're hygiene." |
 
-They're measurably different. We can prove it with math. There's a whole test suite for it that Floyd is quietly proud of and Douglas definitely didn't ask for but here we are.
+The first six are measurably different. We can prove it with math. There's a whole test suite for it that Floyd is quietly proud of and Douglas definitely didn't ask for but here we are. The seventh — vanilla — exists deliberately *outside* that math: it's the baseline you swap to when you want to debug whether the model is doing something or the personality is doing something.
 
 ---
 
 ## Quick Start
+
+There are two paths. Pick the one that matches your tolerance for typing.
+
+**Path A — The launcher symlinks (recommended):**
+
+```bash
+# Type the personality name. It swaps and launches a fresh claude in one motion.
+maestro
+breeze
+sentinel
+sage
+ops
+autonomous
+vanilla
+```
+
+That's it. Each name is a symlink in `~/.local/bin/` pointing at `personality-launcher`, a tiny dispatcher that reads its own invocation name (`$0`), runs the swap, and exec's `claude`. Type `breeze`, get the breeze personality and a new session. Type `vanilla`, get stock Claude and a new session. The `claude` command itself stays untouched — whichever personality you swapped to last is still active there.
+
+Floyd built this because Douglas was tired of typing forty-character paths at 2 AM.
+
+**Path B — The swap script directly (still works, still supported):**
 
 ```bash
 # See what's available
@@ -93,10 +115,11 @@ Douglas's response when he saw the test output: "That's... actually useful." Whi
 - Every swap creates a timestamped backup
 - `--restore` reverts everything
 - Only `CLAUDE.md`, `MEMORY.md`, and `rules/common/development-workflow.md` are touched — hooks, plugins, MCP servers, settings all stay put
-- A PreToolUse hook (`personality-guard.js`) mechanically blocks destructive operations, governance writes, and settings modifications regardless of what the model thinks it wants to do
+- Two PreToolUse hooks live on disk at `~/.claude/scripts/hooks/`: `personality-guard.js` (destructive-op / governance-write / settings-modification gate) and `intake-required-gate.js` (long-horizon engagement intake gate, M11). Both are written, tested with smoke tests, and **awaiting a `settings.json` swap to register them as live hooks.** Until then they sit on the bench. The decision to defer registration was Douglas's call during a critical session — we trade machine enforcement for harness flexibility, knowingly. Wiring them in is a single edit when the moment is right.
+- The intake gate is also personality-aware in design: it only enforces under disciplinary modes (autonomous, ops, sentinel) and stays silent under collaborative modes (breeze, maestro, sage, vanilla). Hot-swappable safety, not a single global panic button.
 - Verify runs 7 checks (personality header, MEMORY overlay, state file, governance refs, rules swap, execution contract, deterministic language audit)
 
-We believe in reversible operations the way Douglas believes in afternoon naps: deeply, structurally, and without apology. We also believe in machine enforcement, because trusting a language model to follow rules it finds inconvenient is how you end up with a Tuesday morning incident.
+We believe in reversible operations the way Douglas believes in afternoon naps: deeply, structurally, and without apology. We also believe in machine enforcement when it's wired in — and in honest documentation when it isn't, because the alternative is the kind of confidence that produces Tuesday morning incidents.
 
 ---
 
@@ -130,4 +153,4 @@ This project runs under Legacy AI governance (.supercache/ v1.5.0). See `FLOYD.m
 
 **Floyd's Labs — Dr.ClaudeGoode**
 
-> *"One personality is an accident. Six is a product. A rubric test proving they're different is Floyd being Floyd. A hook that mechanically blocks the model from ignoring its own rules is Floyd not trusting Floyd."**
+> *"One personality is an accident. Seven is a product. A rubric test proving six of them are different is Floyd being Floyd. A vanilla seventh is Floyd admitting that sometimes the right answer is no costume. A hook that will mechanically block the model from ignoring its own rules — sitting on disk waiting for the registration edit — is Floyd not trusting Floyd, deferred."*

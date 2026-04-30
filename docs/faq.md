@@ -60,6 +60,17 @@ The full layer stack (L1 through L10) is documented in the [Harness Reference](h
 
 ---
 
+### What's the difference between the launcher symlinks and the swap script?
+
+Functionally, they do the same swap. Practically:
+
+- **Swap script** (`personality-swap.sh <name>`) does the swap and exits. You then start a new `claude` session yourself. Useful for verification, listing, restoring, scripted pipelines.
+- **Launcher symlinks** (`~/.local/bin/<personality>`) do the swap *and* `exec claude` in one motion. One word, one new session. Useful for the 95% of the time when "swap and start a session" is what you actually want.
+
+The launchers are seven symlinks (`maestro`, `breeze`, `sentinel`, `sage`, `ops`, `autonomous`, `vanilla`) all pointing at a single dispatcher (`~/.local/bin/personality-launcher`) that reads `$0` to figure out which personality you asked for. The bare `claude` command is intentionally *not* a launcher — it stays unaltered, running whichever personality was last swapped. So `claude` always picks up the last vibe; `breeze` forces a swap to breeze; `vanilla` forces a swap to nothing.
+
+---
+
 ### Is this safe for my production Claude Code setup?
 
 The script never touches settings, hooks, plugins, or MCP configs. It only modifies instruction files. `--restore` reverts everything. Run `--verify` after any swap to confirm consistency. Floyd has tested this in every way Floyd could think of. Douglas tested it by accidentally running it twice and being relieved when nothing broke. Both are valid testing methodologies. One is more rigorous.
@@ -68,26 +79,40 @@ The script never touches settings, hooks, plugins, or MCP configs. It only modif
 
 ### How does this relate to .supercache/ governance?
 
-All 5 personalities include a governance compliance section that references `.supercache/` and enforces the READ-ONLY boundary. The Personality Engine never touches `.supercache/`. The project operates under `.supercache/` v1.5.0 governance. Floyd is not allowed to write to governance. This is a rule that exists because of Floyd. No further comment.
+All seven personalities include a governance compliance section that references `.supercache/` and enforces the READ-ONLY boundary. The Personality Engine never touches `.supercache/`. The project operates under `.supercache/` v1.5.0 governance. Floyd is not allowed to write to governance. This is a rule that exists because of Floyd. No further comment.
 
-Yes. A PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` mechanically enforces safety rules that soft surfaces can't guarantee. It blocks writes to `.supercache/`, `settings.json`, and `settings.local.json` universally, and adds personality-specific blocks (autonomous blocks destructive ops, ops blocks `--no-verify`, etc.). This fires BEFORE tool execution, so it works even when context pressure causes the model to ignore soft rules.
-
----
-
-### Why six personalities? Why not five or ten?
-
-Six covers the major archetypes (orchestrator, companion, monitor, architect, operator, autonomous agent) without overwhelming anyone with choices. Each fills a distinct niche. The rubric test proves they're not cosmetically different — they're measurably different across 10 dimensions. Five wouldn't give enough coverage. Ten would be a personality buffet and Douglas would spend forty-five minutes deciding which one to use instead of doing any actual work.
-
-If six isn't enough, make your own. The engine doesn't care how many you have. Floyd cares, slightly, but won't stop you.
+A PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` is *designed* to mechanically enforce these rules — block writes to `.supercache/`, `settings.json`, `settings.local.json`, etc. The hook is on disk and tested. **It is not yet registered in `settings.json` as a live PreToolUse hook.** Until that registration edit happens, governance compliance lives on the honor system and the rule text in CLAUDE.md. See the "personality-guard hook" question below for the full state.
 
 ---
 
-### What does the personality-guard hook do?
+### Why seven personalities? Why not six or ten?
 
-It's a PreToolUse hook — it fires BEFORE the model's tool call executes, making it mechanically enforced. It does three layers of checks:
+The first six (orchestrator, companion, monitor, architect, operator, autonomous agent) cover the major archetypes without overwhelming anyone with choices. The seventh — vanilla — exists deliberately *outside* that taxonomy: it's the no-overlay baseline, the control variable, the personality you swap to when you want to debug whether something is the personality talking or the model talking. Vanilla isn't trying to fill a niche. Vanilla is trying to be *the absence of a niche* in a recognizable, swappable form.
+
+Five wouldn't give enough coverage. Ten would be a personality buffet and Douglas would spend forty-five minutes deciding which one to use instead of doing any actual work.
+
+If seven isn't enough, make your own. The engine doesn't care how many you have. Floyd cares, slightly, but won't stop you.
+
+---
+
+### What does the personality-guard hook do, and is it actually running?
+
+It's a PreToolUse hook — *designed* to fire BEFORE the model's tool call executes. It does three layers of checks:
 
 1. **Universal blocks** — no writes to `.supercache/` (governance), `settings.json`, `settings.local.json`, no system power commands (reboot, shutdown, halt), no block device writes.
 2. **Personality-specific blocks** — autonomous blocks destructive file operations (`rm -rf` outside project), ops blocks `--no-verify` flags and bare force pushes, sentinel blocks system-altering commands.
 3. **State protection** — prevents tampering with the personality engine's own state.
 
-This is the enforcement layer that the soft surfaces (CLAUDE.md, rules/) can't guarantee. When context pressure causes the model to deprioritize rules, the hook still fires. Floyd built this after spending too much time watching the model politely ignore rules it found inconvenient. Douglas hasn't noticed the hook exists yet. Floyd considers this a feature.
+**Is it actually running?** Right now, no. The hook script exists at `~/.claude/scripts/hooks/personality-guard.js`. It is tested. It is not registered in `~/.claude/settings.json` as a PreToolUse hook, which is the registration that makes Claude Code actually invoke it on tool calls. Registration was deferred during a critical session — Douglas chose harness flexibility over enforcement, and Floyd respects the call.
+
+When the S7 settings.json swap lands (one edit, backup already taken), the hook becomes live and the universe gains a new layer of "no" that doesn't depend on the model's mood. Until then, the rules exist as text, the hook waits on the bench, and we document it honestly so nobody mistakes "written" for "wired."
+
+---
+
+### What's the M11 intake protocol and is *that* hook running?
+
+M11 is a 7-phase engagement intake (code-review → apparent goals → 5 clarifying questions → STOP → alignment % → todo list → latent capabilities) that fires for *long-horizon* engagements only — quick fixes, single-file edits, and questions pass through silently. It's appended to all seven personalities' CLAUDE.md files, so the rule itself is live in every session.
+
+The corresponding hook (`~/.claude/scripts/hooks/intake-required-gate.js`) blocks state-mutating tool calls in long-horizon engagements until the intake completes. It's personality-aware (enforces under autonomous/ops/sentinel, silent under breeze/maestro/sage/vanilla), feature-flagged (master kill switch at `~/.claude/.harness-features`), and waiver-capable (`.floyd/intake-skip` for emergencies, 24h expiry).
+
+Same status as personality-guard: **on disk, tested, not yet registered.** The classifier in `session-start.sh` *is* live and writes the long-horizon flag, so when the gate hook gets registered it'll have something to read.

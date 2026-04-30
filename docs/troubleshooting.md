@@ -94,7 +94,7 @@ touch ~/.claude/MEMORY.md
 
 **Cause:** `set -euo pipefail` at the top means any error kills the process silently. It's the bash equivalent of walking out of a room without explaining why.
 
-**Fix:** Check that all 6 personality directories exist:
+**Fix:** Check that all 7 personality directories exist:
 ```bash
 ls /Volumes/Storage/Dr_ClaudeGoode/personalities/*/surfaces/CLAUDE.md
 ```
@@ -110,9 +110,19 @@ If any are missing, that's your problem. Floyd can't help you if the files aren'
 
 ---
 
-## Personality Guard Hook
+## Personality Guard Hook (currently dormant)
 
-### Tool call blocked with "BLOCKED (personality-guard)"
+### "Wait, the hook isn't running?"
+
+Correct. As of 1.2.0, both `personality-guard.js` and `intake-required-gate.js` exist on disk at `~/.claude/scripts/hooks/` and are tested. **Neither is registered in `~/.claude/settings.json` as a live PreToolUse hook.** Registration was deferred during a critical session.
+
+If you're not seeing block messages from the hooks, that's why. They're not running. You should not see "BLOCKED (personality-guard)" or "BLOCKED (intake-required-gate)" in any current session output.
+
+When the S7 settings.json swap happens, both hooks become live. The two sub-sections below describe behavior under that future state — they apply once registration lands.
+
+---
+
+### Tool call blocked with "BLOCKED (personality-guard)" *(future state, post-registration)*
 
 **Cause:** The PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js` intercepted a tool call that violates the active personality's safety rules. The block message tells you which rule was violated.
 
@@ -126,8 +136,48 @@ Floyd recommends option 3. Douglas would probably do option 4. Floyd has feeling
 
 ---
 
-### Hook blocks a command I need to run
+### Hook blocks a command I need to run *(future state, post-registration)*
 
 **Cause:** The personality-specific rules are working as designed. Ops blocks `--no-verify`. Autonomous blocks destructive operations. Sentinel blocks system-changing commands.
 
 **Fix:** Either switch to a personality that allows the operation, or use option 4 above. The universal blocks (governance, settings, power commands) cannot be overridden by personality switching — they protect the infrastructure. Floyd is unapologetic about this.
+
+---
+
+## Launcher Symlinks
+
+### `breeze: command not found`
+
+**Cause:** Either `~/.local/bin` isn't in your `$PATH`, or the symlinks aren't installed. (Or it's a typo. It's usually a typo.)
+
+**Fix:**
+```bash
+# 1. Check the symlinks exist
+ls -la ~/.local/bin/ | grep -E "(autonomous|breeze|maestro|ops|sage|sentinel|vanilla)"
+
+# 2. Check $PATH includes ~/.local/bin
+echo $PATH | tr ':' '\n' | grep -E "\.local/bin"
+
+# 3. If $PATH is missing it, add to ~/.zshrc:
+#    export PATH="$HOME/.local/bin:$PATH"
+```
+
+If symlinks are missing, recreate them — each is just `ln -s personality-launcher <name>` in `~/.local/bin/`.
+
+---
+
+### Launcher swaps but `claude` doesn't start
+
+**Cause:** Either `claude` isn't on your `$PATH` for the same shell, or `personality-launcher`'s final `exec claude` failed silently.
+
+**Fix:**
+```bash
+# Verify claude resolves
+which claude
+
+# Verify the launcher itself
+which personality-launcher
+cat ~/.local/bin/personality-launcher | tail -5
+```
+
+The launcher's last line is `exec claude "$@"`. If that line errors, the swap already completed but no session started. Just run `claude` manually.
