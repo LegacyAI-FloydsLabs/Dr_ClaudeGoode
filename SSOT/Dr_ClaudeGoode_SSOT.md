@@ -70,8 +70,8 @@ This pattern is deliberate — it reinforces evidence-first thinking and makes t
 - All work is editing text surfaces under `~/.claude/` (settings, hooks, agents, skills, etc.).
 - No build pipeline, no test suite, no server component.
 - Governance compliance is verified via `bootstrap.sh --verify`.
-- Personality Engine (`personality-swap.sh`) swaps L4 surfaces: `~/.claude/CLAUDE.md` (full replacement), `~/.claude/MEMORY.md` (marker-bounded injection), and `~/.claude/rules/common/development-workflow.md` (full replacement). AGENTS.md is backed up but not swapped (documented gap).
-- 6 personalities (maestro, breeze, sentinel, sage, ops, autonomous) each provide CLAUDE.md + MEMORY-IDENTITY.md + rules/development-workflow.md under `personalities/<name>/surfaces/`.
+- Personality Engine (`personality-swap.sh`) swaps L4 surfaces: `~/.claude/CLAUDE.md` (full replacement), `~/.claude/MEMORY.md` (marker-bounded injection), and `~/.claude/rules/common/development-workflow.md` (full replacement).
+- 7 personalities (maestro, breeze, sentinel, sage, ops, autonomous, vanilla) each provide CLAUDE.md + MEMORY-IDENTITY.md + rules/development-workflow.md under `personalities/<name>/surfaces/`.
 - Differentiation is verified by `personality-rubric-test.sh` using 10 metrics with 5 validation checks.
 - Verify function runs 7 checks: personality header, MEMORY overlay, state file, governance refs, rules overlay, execution contract, deterministic language audit.
 - Machine-enforced safety via PreToolUse hook at `~/.claude/scripts/hooks/personality-guard.js`. Universal blocks on governance/settings/power commands. Personality-specific blocks on destructive ops, --no-verify flags, force pushes.
@@ -129,6 +129,7 @@ Every sweep of this SSOT must append one or more entries here. Never edit or rem
 | 2026-04-29 01:15 UTC | Documentation | Replaced monolithic release doc with proper multi-document structure: README.md, docs/quickstart.md, docs/user-guide.md, docs/release-notes.md, docs/troubleshooting.md, docs/faq.md | All 6 docs created with Floyd brand voice | 100% |
 | 2026-04-29 02:17 UTC | Key architectural choices | All 6 personalities have rules overlays, verify function upgraded from 4→7 checks, personality-guard.js hook installed at ~/.claude/scripts/hooks/ | personality-swap.sh:186-310, personality-guard.js:1-215, all 6 verify runs show 7/7 PASS | 100% |
 | 2026-04-29 02:17 UTC | Machine enforcement | PreToolUse hook mechanically blocks governance writes, settings modifications, destructive ops (per personality). 11/11 hook tests pass | node -e test of hook.run() function | 100% |
+| 2026-04-30 15:10 UTC | Key architectural choices | AGENTS.md vestigial references removed from personality-swap.sh. Vanilla added to case statement. Echo formatting bug fixed. Vanilla rules surface created. Personality count updated from 6 to 7. | personality-swap.sh diff, personalities/vanilla/surfaces/rules/development-workflow.md created, --verify and --list output | 100% |
 
 ---
 
@@ -140,6 +141,7 @@ Every sweep of this SSOT must append one or more entries here. Never edit or rem
 - 2026-04-29 00:57 UTC — Generated pre-release documentation package at docs/release-documentation-1.0.0.md. Full traceability for all 10 change items.
 - 2026-04-29 01:15 UTC — Replaced monolithic release doc with proper multi-document structure: README.md, docs/quickstart.md, docs/user-guide.md, docs/release-notes.md, docs/troubleshooting.md, docs/faq.md. Applied Floyd's Labs brand voice.
 - 2026-04-29 02:17 UTC — v1.1.0 update: added rules overlays for breeze, sentinel, sage, ops (all 6 personalities now have complete surface coverage). Built personality-guard.js PreToolUse hook with universal and personality-specific safety enforcement. Upgraded verify function from 4 checks to 7. Updated all 6 docs to reflect changes. Hardened sentinel CLAUDE.md deterministic language.
+- 2026-04-30 15:10 UTC — Resolved ISSUE-0001: removed vestigial AGENTS.md references from personality-swap.sh (header comment, variable, backup loop, restore loop). Added vanilla to case statement. Fixed echo formatting bug for autonomous/ops usage text. Created vanilla rules surface (reset-to-default). Updated SSOT personality count from 6 to 7.
 
 <!-- Append new entries BELOW this comment line, in chronological order. -->
 <!-- Never edit or remove existing entries — this is the authoritative change history. -->

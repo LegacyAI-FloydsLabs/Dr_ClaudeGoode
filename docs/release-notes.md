@@ -194,7 +194,7 @@ Total time to first personality swap: about four seconds. Douglas timed it. He w
 
 | ID | Description | Impact | Honesty Level |
 |---|---|---|---|
-| ISSUE-0001 | `AGENTS.md` is defined and backed up but never actually swapped. The header comment says it's swapped. The code disagrees. No personality directory has an AGENTS.md file. | No user-facing breakage. AGENTS.md stays whatever it was. | We're shipping with this documented rather than pretending it doesn't exist, because Floyd doesn't believe in hiding known issues and Douglas doesn't read this far into release notes anyway. |
+| ISSUE-0001 | ~~`AGENTS.md` is defined and backed up but never actually swapped.~~ **RESOLVED 2026-04-30:** Vestigial AGENTS.md references removed from personality-swap.sh. No personality provides AGENTS.md surfaces; the swap correctly targets CLAUDE.md, MEMORY.md, and rules/ only. | No user-facing breakage ever. Now fixed. | Shipped documented, then fixed properly. |
 
 ---
 

@@ -199,7 +199,7 @@ Add the name to the `PERSONALITIES` variable in `personality-rubric-test.sh` and
 
 | Mechanism | When | What |
 |---|---|---|
-| `.original` backup | First swap only | Permanent reference copy. Covers CLAUDE.md, MEMORY.md, AGENTS.md, and rules. Never overwritten. Even by Floyd. |
+| `.original` backup | First swap only | Permanent reference copy. Covers CLAUDE.md, MEMORY.md, and rules. Never overwritten. Even by Floyd. |
 | `.pre-swap-<timestamp>` backup | Every swap | Timestamped snapshot. Full history. |
 | State file (`~/.claude/.active-personality`) | Every swap | Records which personality is active. |
 | MEMORY.md marker strip | Every swap | Removes previous overlay before injecting new one. Clean slate every time. |

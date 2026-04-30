@@ -15,11 +15,11 @@
 #   sentinel  — Meticulous systems/network admin, proactive monitoring, punchlist-driven
 #   sage      — Strategic architect, sees the whole board, architecture-first thinking
 #   ops       — Production-grade execution engine, CI/CD discipline, deploy-safe
+#   vanilla   — Stock Claude, no flavor overlay (M11/M12 retained, everything else dropped)
 #
 # What gets swapped (in layer order):
 #   L4: ~/.claude/CLAUDE.md         — Primary behavior instructions
 #   L4: ~/.claude/MEMORY.md         — Identity overlay section (appended, reversible)
-#   L4: ~/.claude/AGENTS.md         — Agent orchestration style
 #
 # What gets preserved:
 #   L2: ~/.claude/settings.json     — Hooks, plugins, skills (untouched)
@@ -51,7 +51,6 @@ STATE_FILE="${CLAUDE_DIR}/.active-personality"
 # Surfaces to swap
 CLAUDE_MD="${CLAUDE_DIR}/CLAUDE.md"
 MEMORY_MD="${CLAUDE_DIR}/MEMORY.md"
-AGENTS_MD="${CLAUDE_DIR}/AGENTS.md"
 
 # Marker used to identify injected content in MEMORY.md
 MARKER_BEGIN="# >>> PERSONALITY-OVERLAY:"
@@ -75,7 +74,7 @@ list_personalities() {
   for pdir in "${PERSONALITIES_DIR}"/*/; do
     pname="$(basename "$pdir")"
     if [[ -f "${pdir}surfaces/CLAUDE.md" ]]; then
-      desc=$(head -6 "${pdir}surfaces/CLAUDE.md" | grep 'Principle:' | sed 's/\*\*Principle:\*\* *//' | sed 's/.*Principle: *//')
+      desc=$(head -6 "${pdir}surfaces/CLAUDE.md" | grep -i 'principle:' | sed 's/^[^:]*:[[:space:]]*//' | sed 's/^\*\*//; s/\*\*$//' || true)
       printf "  \033[36m%-12s\033[0m %s\n" "$pname" "$desc"
     fi
   done
@@ -101,7 +100,7 @@ backup_originals() {
   local ts
   ts="$(date +%Y%m%d-%H%M%S)"
 
-  for f in "$CLAUDE_MD" "$MEMORY_MD" "$AGENTS_MD"; do
+  for f in "$CLAUDE_MD" "$MEMORY_MD"; do
     if [[ -f "$f" ]]; then
       local basename
       basename="$(basename "$f")"
@@ -244,7 +243,7 @@ verify_swap() {
     if [[ -f "$personality_rules" ]]; then
       if [[ -f "$rules_target" ]] && head -3 "$rules_target" | grep -qi "OVERRIDES DEFAULT"; then
         local rules_source
-        rules_source=$(head -1 "$rules_target" | grep -oE '(MAESTRO|BREEZE|SENTINEL|SAGE|OPS|AUTONOMOUS)' 2>/dev/null || echo "unknown")
+        rules_source=$(head -1 "$rules_target" | grep -oE '(MAESTRO|BREEZE|SENTINEL|SAGE|OPS|AUTONOMOUS|VANILLA)' 2>/dev/null || echo "unknown")
         ok "Rules: development-workflow.md swapped (${rules_source:-personality-specific})"
         ((pass++))
       else
@@ -300,7 +299,7 @@ restore_originals() {
   fi
 
   local restored=0
-  for f in "$CLAUDE_MD" "$MEMORY_MD" "$AGENTS_MD"; do
+  for f in "$CLAUDE_MD" "$MEMORY_MD"; do
     local basename
     basename="$(basename "$f")"
     local original="${BACKUP_DIR}/${basename}.original"
@@ -347,7 +346,7 @@ case "${1:-}" in
   --verify|-v)
     verify_swap ""
     ;;
-  maestro|breeze|sentinel|sage|ops|autonomous)
+  maestro|breeze|sentinel|sage|ops|autonomous|vanilla)
     activate_personality "$1"
     ;;
   *)
@@ -367,8 +366,9 @@ case "${1:-}" in
     echo "  breeze      Makes hard work look easy, warm, pleasant sessions"
     echo "  sentinel    Meticulous sysadmin, proactive monitoring, punchlist-driven"
     echo "  sage        Strategic architect, sees the whole board, architecture-first"
-    echo "  autonomous  Unsupervised agentic coding, no human in loop, loop detection
-  ops         Production-grade execution, CI/CD discipline, deploy-safe"
+    echo "  autonomous  Unsupervised agentic coding, no human in loop, loop detection"
+    echo "  ops         Production-grade execution, CI/CD discipline, deploy-safe"
+    echo "  vanilla     Stock Claude, no flavor overlay (M11/M12 retained)"
     echo ""
     die "No valid command or personality specified"
     ;;

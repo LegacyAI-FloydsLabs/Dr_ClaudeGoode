@@ -24,7 +24,7 @@ Yes. First swap creates permanent `.original` backups. Every swap creates a time
 
 ### Why doesn't AGENTS.md get swapped?
 
-Good question. The variable is defined, the file is backed up, but the `activate_personality()` function never overwrites it. No personality directory contains an `AGENTS.md` surface file. This is logged as ISSUE-0001. It's either a deferred feature or an oversight. We're shipping with it documented because Floyd doesn't believe in hiding things and Douglas doesn't read issue trackers.
+It used to be listed as a swap surface, but no personality ever provided an AGENTS.md surface file. The variable was defined, the file was backed up on every swap (24 identical backup copies), but nothing ever wrote to it. This was ISSUE-0001, now resolved: the vestigial references have been removed from personality-swap.sh. AGENTS.md is no longer listed as a swapped surface. The Personality Engine targets behavioral surfaces (CLAUDE.md, MEMORY.md identity overlay, and rules/development-workflow.md) — AGENTS.md lives outside that scope by design.
 
 ---
 

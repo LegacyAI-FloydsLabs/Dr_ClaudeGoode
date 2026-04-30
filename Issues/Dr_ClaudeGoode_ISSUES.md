@@ -37,7 +37,7 @@ Issues move forward through these states. Backward transitions are allowed if ne
 
 | ID | Created | Title | Status | Owner | Evidence / Links | Resolution Proof |
 |---|---|---|---|---|---|---|
-| ISSUE-0001 | 2026-04-29 00:15 UTC | AGENTS.md defined but never swapped by personality-swap.sh | New | Unassigned | personality-swap.sh:54 defines AGENTS_MD, :104 backs it up, but activate_personality() has no swap logic. No personality dir contains AGENTS.md. Header comment :23 claims AGENTS.md is swapped. | N/A |
+| ISSUE-0001 | 2026-04-29 00:15 UTC | AGENTS.md defined but never swapped by personality-swap.sh | Resolved | Floyd | personality-swap.sh:54 defines AGENTS_MD, :104 backs it up, but activate_personality() has no swap logic. No personality dir contains AGENTS.md. Header comment :23 claims AGENTS.md is swapped. | Removed all AGENTS.md references from personality-swap.sh (header, variable, backup loop, restore loop). No personality provides AGENTS.md surfaces — the references were vestigial. |
 
 <!-- Each new issue gets its own row. Keep rows compact; if a row needs more detail, -->
 <!-- create a companion file at Issues/NNNN-brief-description.md and link it in Evidence. -->
@@ -89,6 +89,7 @@ Companion files should contain:
 
 - 2026-04-28T17:31:25-0400 — Initialized issues ledger.
 - 2026-04-29 00:15 UTC — Logged ISSUE-0001: AGENTS.md swap gap in personality-swap.sh.
+- 2026-04-30 15:10 UTC — Resolved ISSUE-0001: removed vestigial AGENTS.md references from personality-swap.sh. Added vanilla to case statement. Fixed echo formatting bug for autonomous/ops. Created vanilla rules surface.
 
 <!-- Append new entries BELOW this comment line, keeping them in chronological order. -->
 <!-- Never edit or remove existing entries — this is an audit trail. -->

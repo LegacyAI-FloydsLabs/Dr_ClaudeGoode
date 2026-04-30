@@ -286,7 +286,6 @@ The personality swap leverages these surfaces:
 | `~/.claude/CLAUDE.md` | HIGHEST | Direct instruction on role, tone, constraints | Full file replacement |
 | `~/.claude/MEMORY.md` | HIGH | Environment facts, preferences, identity | Section injection |
 | `~/.claude/rules/common/development-workflow.md` | MEDIUM | Coding and workflow rules | Full file replacement |
-| `~/.claude/AGENTS.md` | MEDIUM | Agent orchestration style | Defined but not yet swapped |
 | Project `FLOYD.md` | PROJECT | Per-project behavior | Not swapped (project-level) |
 
 The swap script targets CLAUDE.md (primary), MEMORY.md (identity section), and rules/common/development-workflow.md (workflow enforcement) because these three files are loaded into EVERY session and have the highest behavioral impact.
